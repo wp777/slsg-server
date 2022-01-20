@@ -18,7 +18,7 @@ export class Slsg {
         
         try {
             const filePath = nodePath.resolve(fileName);
-            const slsgPath = nodePath.resolve("../slsg/build/slsgsat");
+            const slsgPath = nodePath.resolve("../../slsg/build/slsgsat");
             
             const cmd = `${slsgPath} -gui \
                 -no-mcmas-engine \
@@ -67,9 +67,10 @@ export class Slsg {
             });
             
         }
-        catch {
+        catch (e) {
+            console.error(e);
         }
-        fs.rmSync(fileName);
+        fs.unlinkSync(fileName);
         return JSON.stringify({ resultStr });
     }
     
