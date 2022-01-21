@@ -7,7 +7,7 @@ import { UnknownError } from "./validation";
 import { CustomError } from "./validation/CustomError";
 import { Slsg } from "./Slsg";
 
-const port = 80;
+const port = 3000;
 
 const app = express();
 app.use(bodyParser.json());

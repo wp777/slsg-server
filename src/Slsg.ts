@@ -4,6 +4,8 @@ import * as nodePath from "path";
 import { ComputeError } from "./validation";
 import { MaxExecutionTimeExceededError } from "./validation/MaxExecutionTimeExceededError";
 
+const slsgsatPath = "../../slsg/build/slsgsat";
+
 export class Slsg {
     
     static async run(data: { modelStr: string}): Promise<string> {
@@ -14,17 +16,12 @@ export class Slsg {
         fs.writeFileSync(fileName, data.modelStr);
         let resultStr: string = "";
         
-        // return (`{"info": {"status": "SAT", "solvingTime": 0.000104912, "mcmasCheck": false},"models": [{ "label": "Agent 0",  "nodes": [ { "id": 0, "label": "0" }, { "id": 1, "label": "1" }], "links": [{ "id": 0, "source": 0, "target": 0, "label": "0" }, { "id": 3, "source": 1, "target": 1, "label": "1" }]}, { "label": "Agent 1",  "nodes": [ { "id": 0, "label": "0" }, { "id": 1, "label": "1" }], "links": [{ "id": 0, "source": 0, "target": 0, "label": "0" }, { "id": 3, "source": 1, "target": 1, "label": "1" }]}, { "label": "Global model",  "nodes": [ { "id": 0, "label": "[0, 0]", "props": [1] }, { "id": 1, "label": "[0, 1]", "props": [] }, { "id": 2, "label": "[1, 0]", "props": [] }, { "id": 3, "label": "[1, 1]", "props": [] }], "links": [{ "id": 0, "source": 0, "target": 0, "label": "[0, 0]", "props": [1] }, { "id": 5, "source": 1, "target": 1, "label": "[0, 1]" }, { "id": 10, "source": 2, "target": 2, "label": "[1, 0]" }, { "id": 15, "source": 3, "target": 3, "label": "[1, 1]" }]}]}`);
-        
         try {
             const filePath = nodePath.resolve(fileName);
-            const slsgPath = nodePath.resolve("../../slsg/build/slsgsat");
+            const slsgPath = nodePath.resolve(slsgsatPath);
             
             const cmd = `${slsgPath} -gui \
-                -no-mcmas-engine \
-                -mcmas-engine-path="./mcmas -v 1" \
-                -mcmas-check \
-                -mcmas-check-path="./mcmas -v 1" \
+                -no-pdf \
                 -verb=0 \
                 -witness \
                 ${filePath}`;
@@ -35,6 +32,9 @@ export class Slsg {
             resultStr = await new Promise((resolve, reject) => {
                 const proc = exec(
                     cmd,
+                    {
+                        cwd: nodePath.dirname(slsgPath),
+                    },
                     (err, res) => {
                         res = typeof(res) === "string" ? res.split("#".repeat(100))[1] : "";
                         if (res) {
@@ -44,7 +44,7 @@ export class Slsg {
                             clearTimeout(timeoutId);
                             timeoutId = null;
                         }
-                        if (err) {
+                        if (err && !res) {
                             reject(new ComputeError(err.message));
                         }
                         else if (!res || res.length === 0) {
@@ -65,13 +65,12 @@ export class Slsg {
                     }, maxExecutionTimeSeconds * 1000);
                 }
             });
-            
         }
         catch (e) {
             console.error(e);
         }
         fs.unlinkSync(fileName);
-        return JSON.stringify({ resultStr });
+        return resultStr;
     }
     
 }
