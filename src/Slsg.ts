@@ -65,9 +65,14 @@ export class Slsg {
                     }, maxExecutionTimeSeconds * 1000);
                 }
             });
+            const obj = JSON.parse(resultStr);
+            if (obj && obj.error) {
+                throw new ComputeError(obj.error);
+            }
         }
         catch (e) {
             console.error(e);
+            return `${e};`
         }
         fs.unlinkSync(fileName);
         return resultStr;
