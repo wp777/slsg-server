@@ -72,9 +72,14 @@ export class Slsg {
         }
         catch (e) {
             console.error(e);
-            return `${e};`
+            resultStr = `${e};`
         }
-        fs.unlinkSync(fileName);
+        try {
+            fs.unlinkSync(fileName);
+        }
+        catch (e) {
+            console.error(e);
+        }
         return resultStr;
     }
     
