@@ -1,10 +1,9 @@
 import { exec } from "child_process";
 import * as fs from "fs";
 import * as nodePath from "path";
+import { SlsgConfig } from "./SlsgConfig";
 import { ComputeError } from "./validation";
 import { MaxExecutionTimeExceededError } from "./validation/MaxExecutionTimeExceededError";
-
-const slsgsatPath = "../../slsg/build/slsgsat";
 
 export class Slsg {
     
@@ -18,12 +17,13 @@ export class Slsg {
         
         try {
             const filePath = nodePath.resolve(fileName);
-            const slsgPath = nodePath.resolve(slsgsatPath);
+            const slsgPath = nodePath.resolve(SlsgConfig.slsgsatPath);
             
-            const cmd = `${slsgPath} -gui \
+            const cmd = `${slsgPath} \
                 -no-pdf \
                 -verb=0 \
                 -witness \
+                -stv-engine-path=${SlsgConfig.stvPath} \
                 ${filePath}`;
             
             const maxExecutionTimeSeconds = 30;

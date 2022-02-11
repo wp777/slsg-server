@@ -6,8 +6,9 @@ import { Config } from "./Config";
 import { UnknownError } from "./validation";
 import { CustomError } from "./validation/CustomError";
 import { Slsg } from "./Slsg";
+import { SlsgConfig } from "./SlsgConfig";
 
-const port = 3000;
+const port = SlsgConfig.port;
 
 const app = express();
 app.use(bodyParser.json());
