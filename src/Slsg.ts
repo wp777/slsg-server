@@ -14,6 +14,8 @@ export class Slsg {
         const fileName = `${Math.random().toString(36).substr(2)}.txt`;
         fs.writeFileSync(fileName, data.modelStr);
         let resultStr: string = "";
+        let success: boolean = false;
+        let errorObj: any = null;
         
         try {
             const filePath = nodePath.resolve(fileName);
@@ -45,15 +47,28 @@ export class Slsg {
                             timeoutId = null;
                         }
                         if (err && !res) {
-                            reject(new ComputeError(err.message));
+                            let msg = err.message;
+                            if (typeof(msg) !== "string") {
+                                msg = "unknown SLSG module error";
+                            }
+                            let cmdFailedPrefix = `Command failed: ${cmd}`;
+                            if (msg.startsWith(cmdFailedPrefix)) {
+                                msg = msg.substr(cmdFailedPrefix.length).trim();
+                            }
+                            if (msg.length > 1000) {
+                                msg = msg.substr(0, 1000) + "...";
+                            }
+                            reject(new ComputeError(msg));
                         }
                         else if (!res || res.length === 0) {
                             reject(timedOut ? new MaxExecutionTimeExceededError() : new ComputeError("No response from the compute module"));
                         }
                         else if (res.length === 1) {
+                            success = true;
                             resolve(res[0] as string);
                         }
                         else {
+                            success = true;
                             resolve(res);
                         }
                     }
@@ -72,13 +87,16 @@ export class Slsg {
         }
         catch (e) {
             console.error(e);
-            resultStr = `${e};`
+            errorObj = e;
         }
         try {
             fs.unlinkSync(fileName);
         }
         catch (e) {
             console.error(e);
+        }
+        if (!success) {
+            throw errorObj ? errorObj : new ComputeError(resultStr);
         }
         return resultStr;
     }
