@@ -7,7 +7,7 @@ import { MaxExecutionTimeExceededError } from "./validation/MaxExecutionTimeExce
 
 export class Slsg {
     
-    static async run(data: { modelStr: string}): Promise<string> {
+    static async run(data: { modelStr: string, engine?: "mcmas" | "stv" }): Promise<string> {
         if (data.modelStr.length > 1 * 1024 * 1024) {
             throw new Error("Model is too large.");
         }
@@ -21,12 +21,24 @@ export class Slsg {
             const filePath = nodePath.resolve(fileName);
             const slsgPath = nodePath.resolve(SlsgConfig.slsgsatPath);
             
-            const cmd = `${slsgPath} \
-                -no-pdf \
-                -verb=0 \
-                -witness \
-                -stv-engine-path=${SlsgConfig.stvPath} \
-                ${filePath}`;
+            let cmd: string;
+            if (data.engine === "mcmas") {
+                cmd = `${slsgPath} \
+                    -no-pdf \
+                    -verb=0 \
+                    -witness \
+                    -mcmas-engine \
+                    ${filePath}`;
+            }
+            else {
+                cmd = `${slsgPath} \
+                    -no-pdf \
+                    -verb=0 \
+                    -witness \
+                    -stv-engine \
+                    -stv-engine-path=${SlsgConfig.stvPath} \
+                    ${filePath}`;
+            }
             
             const maxExecutionTimeSeconds = 30;
             let timeoutId: NodeJS.Timeout | null = null;
@@ -35,7 +47,7 @@ export class Slsg {
                 const proc = exec(
                     cmd,
                     {
-                        cwd: nodePath.dirname(slsgPath),
+                        cwd: nodePath.dirname(nodePath.join(slsgPath, "../")),
                     },
                     (err, res) => {
                         res = typeof(res) === "string" ? res.split("#".repeat(100))[1] : "";
